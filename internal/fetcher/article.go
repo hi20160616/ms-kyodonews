@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -174,8 +175,6 @@ func (a *Article) fetchTitle() (string, error) {
 			configs.Data.MS.Title)
 	}
 	title := n[0].FirstChild.Data
-	rp := strings.NewReplacer(" - 國際西藏郵報", "")
-	title = strings.TrimSpace(rp.Replace(title))
 	return gears.ChangeIllegalChar(title), nil
 }
 
@@ -185,15 +184,24 @@ func (a *Article) fetchUpdateTime() (*timestamppb.Timestamp, error) {
 			configs.Data.MS.Title, a.U.String())
 	}
 
-	n := exhtml.MetasByProperty(a.doc, "article:published_time")
-
-	t := time.Now() // if no time fetched, return current time
-	var err error
-	if len(n) > 0 && len(n[0].Attr) > 1 {
-		t, err = time.Parse("2006-01-02 15:04:05", n[0].Attr[1].Val)
-		if err != nil {
-			return nil, errors.WithMessage(err, "no matched meta contains published_time")
-		}
+	doc := exhtml.ElementsByTagAndType(a.doc, "script", "application/ld+json")
+	if doc == nil {
+		return nil, fmt.Errorf("[%s] fetchUpdateTime: cannot get target nodes: %s",
+			configs.Data.MS.Title, a.U.String())
+	}
+	d := doc[0].FirstChild
+	if d.Type != html.TextNode {
+		return nil, fmt.Errorf("[%s] fetchUpdateTime: target node have no text: %s",
+			configs.Data.MS.Title, a.U.String())
+	}
+	raw := d.Data
+	re := regexp.MustCompile(`"date\w*?":\s*?"(.*?)"`)
+	rs := re.FindAllStringSubmatch(raw, -1)
+	// dateModified -> rs[1][1], datePublished -> rs[0][1]
+	// rs[1][1] -> 2021-10-11 10:34:56
+	t, err := time.Parse("2006-01-02 15:04:05", rs[1][1])
+	if err != nil {
+		return nil, err
 	}
 	if t.Before(time.Now().AddDate(0, 0, -3)) {
 		return timestamppb.New(t), ErrTimeOverDays
@@ -211,20 +219,11 @@ func (a *Article) fetchContent() (string, error) {
 		return "", errors.Errorf("[%s] fetchContent: doc is nil: %s", configs.Data.MS.Title, a.U.String())
 	}
 	body := ""
-	bodyN := exhtml.ElementsByTagAndClass(a.doc, "div", "article-content-main")
+	bodyN := exhtml.ElementsByTagAndClass(a.doc, "div", "article-body")
 	if len(bodyN) == 0 {
 		return body, errors.Errorf("no article content matched: %s", a.U.String())
 	}
-	// Fetch quote
-	n := exhtml.ElementsByTagAndClass(bodyN[0], "blockquote", "article-intro")
-	if len(n) != 0 {
-
-		body += "> " + gears.ChangeIllegalChar(
-			n[0].FirstChild.NextSibling.FirstChild.Data)
-	}
-	// Fetch content
-	n = exhtml.ElementsByTagAndClass(bodyN[0], "section", "article-content")
-	plist := exhtml.ElementsByTag(n[0], "p")
+	plist := exhtml.ElementsByTag(bodyN[0], "p")
 	for _, v := range plist {
 		if v.FirstChild == nil {
 			continue

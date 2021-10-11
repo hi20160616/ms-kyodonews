@@ -17,7 +17,7 @@ require (
 	google.golang.org/protobuf v1.26.0
 )
 
-require github.com/hi20160616/exhtml v0.0.0-20211009095616-ce7431c50cff
+require github.com/hi20160616/exhtml v0.0.0-20211011024837-0504789de279
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
