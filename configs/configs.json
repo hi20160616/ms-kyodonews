@@ -1,0 +1,13 @@
+{
+  "dbpath":"db",
+  "microservice":{
+    "title":"kyodonews",
+    "domain":"cn.kyodonews.com",
+    "url":[
+      "https://cn.kyodonews.com/"
+    ],
+    "addr":":10001",
+    "timeout":"1s",
+    "heartbeat":"5m"
+  }
+}
