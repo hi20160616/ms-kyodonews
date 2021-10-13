@@ -1,13 +1,6 @@
 {
-  "dbpath":"db",
-  "microservice":{
-    "title":"kyodonews",
-    "domain":"china.kyodonews.net",
-    "url":[
-      "https://china.kyodonews.net/rss/news.xml"
-    ],
-    "addr":":10002",
-    "timeout":"1s",
-    "heartbeat":"5m"
-  }
+  "debug":false,
+  "verbose":false,
+  "gist": "https://gist.githubusercontent.com/hi20160616/277faf779bee0d0d1525696eff6e8b56/raw/configs.json",
+  "dbpath":"db"
 }
