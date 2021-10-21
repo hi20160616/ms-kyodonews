@@ -243,7 +243,8 @@ func (a *Article) fetchContent() (string, error) {
 func (a *Article) fmtContent(body string) (string, error) {
 	var err error
 	title := "# " + a.Title + "\n\n"
-	lastupdate := shanghai(a.UpdateTime.AsTime()).Format(time.RFC3339)
+	// lastupdate := shanghai(a.UpdateTime.AsTime()).Format(time.RFC3339)
+	lastupdate := a.UpdateTime.AsTime().Format(time.RFC3339)
 	webTitle := fmt.Sprintf(" @ [%s](/list/?v=%[1]s): [%[2]s](http://%[2]s)", a.WebsiteTitle, a.WebsiteDomain)
 	u, err := url.QueryUnescape(a.U.String())
 	if err != nil {
