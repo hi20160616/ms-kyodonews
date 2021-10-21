@@ -170,12 +170,12 @@ func (a *Article) fetchArticle(rawurl string) (*Article, error) {
 
 func (a *Article) fetchTitle() (string, error) {
 	n := exhtml.ElementsByTag(a.doc, "title")
-	if n == nil || len(n) == 0 {
-		return "", fmt.Errorf("[%s] there is no element <title>: %s",
-			configs.Data.MS["nytimes"].Title, a.U.String())
+	for _, v := range n {
+		if v.FirstChild != nil {
+			return gears.ChangeIllegalChar(v.FirstChild.Data), nil
+		}
 	}
-	title := n[0].FirstChild.Data
-	return gears.ChangeIllegalChar(title), nil
+	return "", fmt.Errorf("none title: %s", a.U.String())
 }
 
 func (a *Article) fetchUpdateTime() (*timestamppb.Timestamp, error) {
